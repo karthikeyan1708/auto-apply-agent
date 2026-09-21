@@ -1,0 +1,75 @@
+{
+  "candidate": {
+    "fullName": "M KARTHIKEYAN",
+    "email": "karthikeyan17802@gmail.com",
+    "phone": "+91 9380699461",
+    "location": "Hyderabad / Bengaluru, India (Open to Remote / Relocation)",
+    "linkedIn": "https://www.linkedin.com/in/karthikeyan-m-10a35a242/",
+    "github": "https://github.com/karthikeyan1708",
+    "portfolio": "https://karthikeyan1708.github.io",
+    "currentTitle": "AI Engineer & OT Cybersecurity Analyst (Associate at PwC)",
+    "totalYearsExperience": 2,
+    "skills": [
+      "Cybersecurity",
+      "OT/ICS Security",
+      "Wireshark",
+      "Microsoft Sentinel",
+      "Defender for IoT",
+      "PCAP Analysis",
+      "ISO 27001:2022",
+      "Python",
+      "Machine Learning",
+      "Deep Learning",
+      "PyTorch",
+      "TensorFlow",
+      "FastAPI",
+      "Docker",
+      "XGBoost",
+      "NLP",
+      "Whisper (ASR)",
+      "Anomaly Detection",
+      "AWS",
+      "SQL",
+      "Java"
+    ]
+  },
+  "jobPreferences": {
+    "targetTitles": [
+      "Cybersecurity Analyst",
+      "OT Cybersecurity Engineer",
+      "SOC Threat Analyst",
+      "AI Security Specialist",
+      "Information Security Engineer",
+      "AI Engineer",
+      "Machine Learning Engineer",
+      "Full Stack Engineer"
+    ],
+    "targetLocations": [
+      "Remote",
+      "Hyderabad",
+      "Bengaluru",
+      "Hybrid"
+    ],
+    "minSalaryUSD": 75000,
+    "maxApplicationsPerDay": 25,
+    "minMatchPercentage": 70,
+    "blacklistCompanies": [
+      "Revature",
+      "CyberCoders",
+      "Mass Recruiters LLC"
+    ]
+  },
+  "qaAnswers": {
+    "workAuthorization": "Authorized to work in India; open to global remote contracts and relocation.",
+    "requireSponsorship": "No sponsorship needed for remote contracts; open to sponsorship for international relocation.",
+    "noticePeriod": "Immediate / 15 Days",
+    "expectedSalary": "$80,000 - $115,000 USD / annum",
+    "customCoverNote": "AI Engineer and OT Cybersecurity Analyst with ~2 years experience at PwC building production-grade ML anomaly detection pipelines, automating PCAP security analytics, and delivering ISO 27001 critical infrastructure security assessments across aviation, energy, telecom, and manufacturing."
+  },
+  "monitoring": {
+    "dailyRunTimeUTC": "09:00",
+    "webhookProvider": "Discord",
+    "webhookUrl": "https://discord.com/api/webhooks/sample-webhook-id",
+    "emailDigestEnabled": true
+  }
+}

@@ -1,0 +1,54 @@
+name: Daily Auto-Apply Cloud Agent
+
+on:
+  schedule:
+    # Runs at 09:00 AM UTC every single day automatically
+    - cron: '0 9 * * *'
+  workflow_dispatch:
+    # Allows manually triggering the daily agent run anytime from GitHub UI
+
+jobs:
+  auto-apply:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 Checkout Repository Code
+        uses: actions/checkout@v4
+
+      - name: 🟢 Setup Node.js Environment
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: 📦 Install Dependencies
+        run: npm ci
+
+      - name: 🚀 Execute Daily Auto-Apply Agent
+        env:
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+        run: npm run agent:run
+
+      - name: 📑 Generate Daily Markdown Summary
+        run: npm run agent:report
+
+      - name: 📱 Dispatch Daily Webhook Digest
+        env:
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+        run: npm run agent:webhook
+
+      - name: 💾 Commit & Push Updated Application Logs
+        run: |
+          git config --global user.name "AutoApply Cloud Bot"
+          git config --global user.email "bot@autoapply.ai"
+          git add data/applications.json reports/
+          git diff-index --quiet HEAD || git commit -m "chore(data): auto-update daily application logs [skip ci]"
+          git push
+        continue-on-error: true
+
+      - name: 📦 Upload Daily Report Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: daily-reports-${{ github.run_number }}
+          path: reports/
