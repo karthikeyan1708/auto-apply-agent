@@ -107,6 +107,32 @@ export async function sendDailyEmailDigest(targetDate = null) {
   console.log(`Subject: ${emailSubject}`);
   console.log(`Applied Today: ${applied.length} | Review Needed: ${review.length}`);
 
+  // Check Resend API key
+  const resendApiKey = process.env.RESEND_API_KEY;
+  if (resendApiKey) {
+    try {
+      const response = await fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${resendApiKey}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          from: 'AutoApply Agent <onboarding@resend.dev>',
+          to: recipientEmail,
+          subject: emailSubject,
+          html: htmlBody
+        })
+      });
+      const data = await response.json();
+      console.log(`✅ Email delivered via Resend API to ${recipientEmail}! ID: ${data.id}`);
+      return { success: true, resendId: data.id };
+    } catch (err) {
+      console.error(`❌ Resend API Error:`, err.message);
+    }
+  }
+
+  // Check SMTP
   const smtpUser = process.env.SMTP_USER || process.env.GMAIL_USER;
   const smtpPass = process.env.SMTP_PASS || process.env.GMAIL_APP_PASS;
   const smtpHost = process.env.SMTP_HOST || 'smtp.gmail.com';
@@ -138,11 +164,10 @@ export async function sendDailyEmailDigest(targetDate = null) {
       console.error(`❌ SMTP Email Delivery Error:`, err.message);
       return { success: false, error: err.message };
     }
-  } else {
-    console.log(`ℹ️ SMTP Credentials (SMTP_USER / SMTP_PASS) not set. HTML digest compiled successfully.`);
-    console.log(`👉 Add GMAIL_USER and GMAIL_APP_PASS to your GitHub Repository Secrets to receive live emails in your inbox!`);
-    return { success: true, compiled: true, note: 'SMTP_USER and SMTP_PASS required for live SMTP dispatch' };
   }
+
+  console.log(`ℹ️ No live email API key (RESEND_API_KEY) or SMTP credentials configured.`);
+  return { success: true, compiled: true };
 }
 
 if (process.argv[1] && process.argv[1].endsWith('email-digest.js')) {
