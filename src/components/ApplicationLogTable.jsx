@@ -1,10 +1,13 @@
 import React, { useState } from 'react';
-import { Search, Filter, ExternalLink, Info, CheckCircle2, AlertTriangle, FastForward, ChevronRight, X } from 'lucide-react';
+import { Search, Filter, ExternalLink, Info, CheckCircle2, AlertTriangle, FastForward, FileSpreadsheet, Mail, Copy, Check, X } from 'lucide-react';
+import { generateHROutreachEmail } from '../utils/hrOutreach.js';
 
 export default function ApplicationLogTable({ applications }) {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('ALL');
   const [selectedApp, setSelectedApp] = useState(null);
+  const [hrEmailJob, setHrEmailJob] = useState(null);
+  const [copiedEmail, setCopiedEmail] = useState(false);
 
   const filteredApps = applications.filter(app => {
     const matchesSearch = 
@@ -19,6 +22,11 @@ export default function ApplicationLogTable({ applications }) {
     return matchesSearch && matchesStatus;
   });
 
+  const handleExportExcel = () => {
+    // Triggers download or notification of Excel file location
+    alert("📊 Excel Application Tracker is live at: data/applications_tracker.xlsx\n(Generated automatically on every run)");
+  };
+
   return (
     <div className="glass-panel" style={{ padding: '24px' }}>
       {/* Header & Controls */}
@@ -32,7 +40,7 @@ export default function ApplicationLogTable({ applications }) {
       }}>
         <div>
           <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--text-main)' }}>
-            Application History Log
+            Application History Log & Tracker
           </h3>
           <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
             Showing {filteredApps.length} of {applications.length} total applications
@@ -40,8 +48,13 @@ export default function ApplicationLogTable({ applications }) {
         </div>
 
         <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+          {/* Excel Export Button */}
+          <button onClick={handleExportExcel} className="btn-secondary" style={{ color: '#34d399', borderColor: 'rgba(16, 185, 129, 0.3)' }}>
+            <FileSpreadsheet size={16} /> Export Excel (.xlsx)
+          </button>
+
           {/* Search Input */}
-          <div style={{ position: 'relative', minWidth: '220px' }}>
+          <div style={{ position: 'relative', minWidth: '200px' }}>
             <Search size={16} style={{
               position: 'absolute',
               left: '12px',
@@ -51,7 +64,7 @@ export default function ApplicationLogTable({ applications }) {
             }} />
             <input
               type="text"
-              placeholder="Search company, role, location..."
+              placeholder="Search company, role..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               style={{
@@ -179,13 +192,21 @@ export default function ApplicationLogTable({ applications }) {
                     </td>
 
                     <td style={{ padding: '14px 16px', textAlign: 'right' }}>
-                      <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
+                      <div style={{ display: 'flex', gap: '6px', justifyContent: 'flex-end' }}>
+                        <button
+                          onClick={() => setHrEmailJob(app)}
+                          className="btn-secondary"
+                          style={{ padding: '6px 10px', fontSize: '0.75rem', color: 'var(--accent-purple)' }}
+                          title="Generate Recruiter HR Outreach Email"
+                        >
+                          <Mail size={13} /> Outreach HR
+                        </button>
                         <button
                           onClick={() => setSelectedApp(app)}
                           className="btn-secondary"
-                          style={{ padding: '6px 12px', fontSize: '0.75rem' }}
+                          style={{ padding: '6px 10px', fontSize: '0.75rem' }}
                         >
-                          <Info size={14} /> Details
+                          <Info size={13} /> Details
                         </button>
                         <a
                           href={app.jobUrl}
@@ -195,7 +216,7 @@ export default function ApplicationLogTable({ applications }) {
                           style={{ padding: '6px 10px', color: 'var(--accent-cyan)' }}
                           title="Open Job Link"
                         >
-                          <ExternalLink size={14} />
+                          <ExternalLink size={13} />
                         </a>
                       </div>
                     </td>
@@ -206,6 +227,114 @@ export default function ApplicationLogTable({ applications }) {
           </tbody>
         </table>
       </div>
+
+      {/* HR Outreach Modal */}
+      {hrEmailJob && (() => {
+        const outreach = generateHROutreachEmail(hrEmailJob);
+        return (
+          <div style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(0, 0, 0, 0.75)',
+            backdropFilter: 'blur(8px)',
+            display: 'flex',
+            alignItems: 'center',
+            justify: 'center',
+            zIndex: 100,
+            padding: '20px'
+          }}>
+            <div className="glass-panel" style={{
+              width: '100%',
+              maxWidth: '640px',
+              padding: '28px',
+              position: 'relative'
+            }}>
+              <button
+                onClick={() => setHrEmailJob(null)}
+                style={{
+                  position: 'absolute',
+                  top: '20px',
+                  right: '20px',
+                  background: 'none',
+                  border: 'none',
+                  color: 'var(--text-muted)',
+                  cursor: 'pointer'
+                }}
+              >
+                <X size={20} />
+              </button>
+
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '4px' }}>
+                <Mail size={22} color="var(--accent-purple)" />
+                <h3 style={{ fontSize: '1.2rem', fontWeight: 800 }}>
+                  Recruiter / HR Cold Email Generator
+                </h3>
+              </div>
+              <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginBottom: '16px' }}>
+                Customized pitch for <strong>{hrEmailJob.company}</strong> ({hrEmailJob.title}) highlighting PwC OT Cybersecurity & ML background.
+              </p>
+
+              <div style={{ marginBottom: '14px' }}>
+                <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-muted)', marginBottom: '4px' }}>EMAIL SUBJECT</label>
+                <input
+                  type="text"
+                  readOnly
+                  value={outreach.subject}
+                  style={{
+                    width: '100%',
+                    background: 'rgba(255, 255, 255, 0.05)',
+                    border: '1px solid var(--border-glass)',
+                    borderRadius: '8px',
+                    padding: '8px 12px',
+                    color: 'var(--accent-cyan)',
+                    fontSize: '0.85rem',
+                    fontWeight: 600
+                  }}
+                />
+              </div>
+
+              <div style={{ marginBottom: '20px' }}>
+                <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-muted)', marginBottom: '4px' }}>EMAIL BODY</label>
+                <textarea
+                  readOnly
+                  rows={10}
+                  value={outreach.body}
+                  style={{
+                    width: '100%',
+                    background: '#040711',
+                    border: '1px solid var(--border-glass)',
+                    borderRadius: '10px',
+                    padding: '12px',
+                    color: '#e2e8f0',
+                    fontFamily: 'var(--font-sans)',
+                    fontSize: '0.825rem',
+                    lineHeight: 1.5,
+                    resize: 'none'
+                  }}
+                />
+              </div>
+
+              <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
+                <button
+                  onClick={() => {
+                    navigator.clipboard.writeText(`Subject: ${outreach.subject}\n\n${outreach.body}`);
+                    setCopiedEmail(true);
+                    setTimeout(() => setCopiedEmail(false), 2500);
+                  }}
+                  className="btn-primary"
+                  style={{ fontSize: '0.85rem' }}
+                >
+                  {copiedEmail ? <Check size={16} /> : <Copy size={16} />}
+                  {copiedEmail ? 'Copied to Clipboard!' : 'Copy HR Email Draft'}
+                </button>
+                <button onClick={() => setHrEmailJob(null)} className="btn-secondary" style={{ fontSize: '0.85rem' }}>
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
 
       {/* Detail Modal Drawer */}
       {selectedApp && (

@@ -1,6 +1,9 @@
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { exportApplicationsToExcel } from './export-excel.js';
+import { generateDailyReport } from './generate-report.js';
+import { sendDailyEmailDigest } from './email-digest.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -26,7 +29,6 @@ function writeJSON(filePath, data) {
   fs.writeFileSync(filePath, JSON.stringify(data, null, 2), 'utf8');
 }
 
-// Calculate match score between candidate profile & job description
 function calculateMatchScore(candidate, job) {
   const jobText = (job.title + " " + job.description + " " + (job.requirements || []).join(" ")).toLowerCase();
   const candidateSkills = (candidate.skills || []).map(s => s.toLowerCase());
@@ -38,7 +40,6 @@ function calculateMatchScore(candidate, job) {
     }
   });
 
-  // Calculate percentage of job requirements matched
   const reqs = job.requirements || [];
   let reqMatches = 0;
   reqs.forEach(req => {
@@ -48,7 +49,6 @@ function calculateMatchScore(candidate, job) {
   });
 
   const skillScore = reqs.length > 0 ? (reqMatches / reqs.length) * 70 : 50;
-  
   const targetTitles = (job.targetTitles || []).map(t => t.toLowerCase());
   const titleMatch = targetTitles.some(tt => job.title.toLowerCase().includes(tt) || tt.includes(job.title.toLowerCase()));
 
@@ -58,7 +58,6 @@ function calculateMatchScore(candidate, job) {
   return Math.max(65, finalScore);
 }
 
-// Simulated or Real Auto-Apply Engine
 export async function runAutoApplyAgent(options = { isDryRun: false, maxJobs: 5 }) {
   console.log('---------------------------------------------------------');
   console.log(`🚀 Starting Auto-Apply Agent Session [${new Date().toISOString()}]`);
@@ -71,10 +70,10 @@ export async function runAutoApplyAgent(options = { isDryRun: false, maxJobs: 5 
   const existingApps = readJSON(appsPath, []);
 
   console.log(`👤 Candidate: ${candidate.fullName || 'User'} (${candidate.currentTitle})`);
+  console.log(`✉️ Recipient Email Digest: ${candidate.email || 'karthikeyan17802@gmail.com'}`);
   console.log(`🎯 Target Roles: ${(preferences.targetTitles || []).join(', ')}`);
   console.log(`📊 Daily Max Cap: ${preferences.maxApplicationsPerDay || 25} | Min Match: ${preferences.minMatchPercentage || 70}%`);
 
-  // Cybersecurity & AI Incoming Jobs Pool
   const incomingJobsPool = [
     {
       company: "Palo Alto Networks",
@@ -169,9 +168,17 @@ export async function runAutoApplyAgent(options = { isDryRun: false, maxJobs: 5 
   const updatedApps = [...newApplications, ...existingApps];
   writeJSON(appsPath, updatedApps);
 
+  // Auto-generate Excel tracker, Markdown Report, and Email Digest
+  console.log('\n---------------------------------------------------------');
+  console.log('🔄 POST-RUN AUTOMATED TASKS');
+  console.log('---------------------------------------------------------');
+  exportApplicationsToExcel();
+  generateDailyReport(todayStr);
+  await sendDailyEmailDigest(todayStr);
+
   console.log('\n---------------------------------------------------------');
   console.log(`✅ Agent Execution Finished. Processed ${newApplications.length} jobs.`);
-  console.log(`Saved updated application state to data/applications.json`);
+  console.log(`Updated JSON database, Excel tracker, Markdown report, and Email Digest.`);
   console.log('---------------------------------------------------------\n');
 
   return {

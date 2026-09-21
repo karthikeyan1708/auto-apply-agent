@@ -10,12 +10,16 @@
     "agent:run": "node agent/engine.js",
     "agent:dry-run": "node agent/engine.js --dry-run",
     "agent:report": "node agent/generate-report.js",
-    "agent:webhook": "node agent/webhook.js --test"
+    "agent:webhook": "node agent/webhook.js --test",
+    "agent:email": "node agent/email-digest.js",
+    "agent:excel": "node agent/export-excel.js",
+    "agent:hr-email": "node agent/hr-outreach.js"
   },
   "dependencies": {
+    "lucide-react": "^0.294.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "lucide-react": "^0.294.0"
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@types/react": "^18.2.37",
