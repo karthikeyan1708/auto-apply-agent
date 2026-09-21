@@ -5,7 +5,6 @@ on:
     # Runs at 09:00 AM UTC every single day automatically
     - cron: '0 9 * * *'
   workflow_dispatch:
-    # Allows manually triggering the daily agent run anytime from GitHub UI
 
 jobs:
   auto-apply:
@@ -28,6 +27,10 @@ jobs:
         env:
           DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          GMAIL_USER: ${{ secrets.GMAIL_USER }}
+          GMAIL_APP_PASS: ${{ secrets.GMAIL_APP_PASS }}
+          SMTP_USER: ${{ secrets.GMAIL_USER }}
+          SMTP_PASS: ${{ secrets.GMAIL_APP_PASS }}
         run: npm run agent:run
 
       - name: 📑 Generate Daily Markdown Summary
@@ -38,17 +41,19 @@ jobs:
           DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
         run: npm run agent:webhook
 
-      - name: 💾 Commit & Push Updated Application Logs
+      - name: 💾 Commit & Push Updated Application Logs & Excel Tracker
         run: |
           git config --global user.name "AutoApply Cloud Bot"
           git config --global user.email "bot@autoapply.ai"
-          git add data/applications.json reports/
-          git diff-index --quiet HEAD || git commit -m "chore(data): auto-update daily application logs [skip ci]"
+          git add data/ reports/
+          git diff-index --quiet HEAD || git commit -m "chore(data): auto-update daily application logs & excel tracker [skip ci]"
           git push
         continue-on-error: true
 
-      - name: 📦 Upload Daily Report Artifacts
+      - name: 📦 Upload Daily Report & Excel Artifacts
         uses: actions/upload-artifact@v4
         with:
           name: daily-reports-${{ github.run_number }}
-          path: reports/
+          path: |
+            reports/
+            data/applications_tracker.xlsx

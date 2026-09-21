@@ -1,6 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import nodemailer from 'nodemailer';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -80,7 +81,7 @@ export async function sendDailyEmailDigest(targetDate = null) {
 
       ${todayApps.length === 0 ? '<p style="color: #64748b; font-style: italic;">No applications processed today.</p>' : todayApps.map(app => `
         <div class="job-item ${app.status === 'Review Required' ? 'job-item-review' : ''}">
-          <div style="display: flex; justify-space-between; align-items: center;">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
             <span class="job-company">${app.company}</span>
             <span class="badge ${app.status === 'Applied' ? 'badge-applied' : 'badge-review'}">${app.status} (${app.matchScore}% Match)</span>
           </div>
@@ -100,19 +101,48 @@ export async function sendDailyEmailDigest(targetDate = null) {
   `;
 
   console.log('---------------------------------------------------------');
-  console.log('📧 DAILY EMAIL DIGEST ENGINE');
+  console.log('📧 DAILY EMAIL DIGEST DISPATCHER');
   console.log('---------------------------------------------------------');
-  console.log(`To: ${recipientEmail}`);
+  console.log(`Recipient: ${recipientEmail}`);
   console.log(`Subject: ${emailSubject}`);
   console.log(`Applied Today: ${applied.length} | Review Needed: ${review.length}`);
-  console.log('---------------------------------------------------------');
-  console.log('✅ Daily HTML email digest compiled & ready to send via SMTP / SendGrid / GitHub Actions Email Step.');
 
-  return {
-    recipient: recipientEmail,
-    subject: emailSubject,
-    html: htmlBody
-  };
+  const smtpUser = process.env.SMTP_USER || process.env.GMAIL_USER;
+  const smtpPass = process.env.SMTP_PASS || process.env.GMAIL_APP_PASS;
+  const smtpHost = process.env.SMTP_HOST || 'smtp.gmail.com';
+  const smtpPort = process.env.SMTP_PORT ? Number(process.env.SMTP_PORT) : 465;
+
+  if (smtpUser && smtpPass) {
+    try {
+      const transporter = nodemailer.createTransport({
+        host: smtpHost,
+        port: smtpPort,
+        secure: smtpPort === 465,
+        auth: {
+          user: smtpUser,
+          pass: smtpPass
+        }
+      });
+
+      const mailOptions = {
+        from: `"AutoApply Agent" <${smtpUser}>`,
+        to: recipientEmail,
+        subject: emailSubject,
+        html: htmlBody
+      };
+
+      const info = await transporter.sendMail(mailOptions);
+      console.log(`✅ Email sent successfully to ${recipientEmail}! Message ID: ${info.messageId}`);
+      return { success: true, messageId: info.messageId };
+    } catch (err) {
+      console.error(`❌ SMTP Email Delivery Error:`, err.message);
+      return { success: false, error: err.message };
+    }
+  } else {
+    console.log(`ℹ️ SMTP Credentials (SMTP_USER / SMTP_PASS) not set. HTML digest compiled successfully.`);
+    console.log(`👉 Add GMAIL_USER and GMAIL_APP_PASS to your GitHub Repository Secrets to receive live emails in your inbox!`);
+    return { success: true, compiled: true, note: 'SMTP_USER and SMTP_PASS required for live SMTP dispatch' };
+  }
 }
 
 if (process.argv[1] && process.argv[1].endsWith('email-digest.js')) {
